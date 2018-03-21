@@ -6,6 +6,10 @@
   "directories": {
     "test": "test"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jake-Song/dapp-playlist.git"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -18,6 +22,8 @@
     "babel-preset-env": "^1.6.1",
     "babel-preset-react": "^6.24.1",
     "css-loader": "^0.28.10",
+    "express": "^4.16.3",
+    "express-ejs-extend": "0.0.1",
     "json-loader": "^0.5.7",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
@@ -29,5 +35,10 @@
     "webpack": "^4.1.0",
     "webpack-cli": "^2.0.10",
     "webpack-dev-server": "^3.1.1"
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "react-engine": "^4.5.1",
+    "socket.io": "^2.0.4"
   }
 }

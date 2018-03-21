@@ -346,7 +346,7 @@ const MyContract = web3.eth.contract([
       })
 
       execute.addEventListener('click', event => {
-        if(this._stopWatch.state.secondsElapsed <= 0 || this.state.exStatus === 0){
+        if(this._stopWatch.state.countDown <= 0 || this.state.exStatus === 0){
           this.executeNum()
         } else {
           alert('you cannot execute until time is up')
@@ -367,7 +367,6 @@ executeNum(){
       console.log(result);
       document.getElementById('result').innerHTML = 'Transaction id:' + result + '<span id="pending" style="color:red;">(Pending)</span>'
       txid = result
-      this._stopWatch.handleResetClick()
     }
   })
   var filter = web3.eth.filter('latest')
@@ -410,7 +409,6 @@ voteNumber(number, cb){
 
             if(this.state.numberOfBets < 1){
 
-              this._stopWatch.handleResetClick()
               this._stopWatch.handleStartClick()
 
               this.setState({
