@@ -369,14 +369,36 @@ executeNum(){
       txid = result
     }
   })
+
   var filter = web3.eth.filter('latest')
+
   filter.watch((e, r) => {
       web3.eth.getTransaction(txid, (e,r) => {
       if (r != null && r.blockNumber > 0) {
-        document.getElementById('pending').innerHTML = '(기록된 블록: ' + r.blockNumber + ')';
-        document.getElementById('pending').style.cssText ='color:green;';
+
         web3.eth.getTransactionReceipt(txid, (e,r) => {
-          console.log(parseInt(r.status.toString(10)))
+
+          if(parseInt(r.status.toString(10)) === 1){
+            document.getElementById('pending').innerHTML = '(기록된 블록: ' + r.blockNumber + ')';
+            document.getElementById('pending').style.cssText ='color:green;';
+
+            this.setState({
+              exStatus: parseInt(r.status.toString(10))
+            })
+
+            console.log(parseInt(r.status.toString(10)))
+
+          } else {
+            document.getElementById('pending').innerHTML = '(오류가 발생했습니다. 다시 실행해주세요.)';
+            document.getElementById('pending').style.cssText ='color:red;';
+
+            this.setState({
+              exStatus: parseInt(r.status.toString(10))
+            })
+
+            console.log(parseInt(r.status.toString(10)))
+          }
+
           this.setState({
             exStatus: parseInt(r.status.toString(10))
           })
@@ -421,14 +443,22 @@ voteNumber(number, cb){
       }
 
      var filter = web3.eth.filter('latest')
+
      filter.watch(function(e, r) {
 
        web3.eth.getTransaction(txid, function(e,r){
          if (r != null && r.blockNumber > 0) {
-           document.getElementById('pending').innerHTML = '(기록된 블록: ' + r.blockNumber + ')';
-           document.getElementById('pending').style.cssText ='color:green;';
+
            web3.eth.getTransactionReceipt(txid, function(e,r){
-             console.log(parseInt(r.status.toString(10)))
+             if(parseInt(r.status.toString(10)) === 1){
+               document.getElementById('pending').innerHTML = '(기록된 블록: ' + r.blockNumber + ')';
+               document.getElementById('pending').style.cssText ='color:green;';
+               console.log(parseInt(r.status.toString(10)))
+             } else {
+               document.getElementById('pending').innerHTML = '(오류가 발생했습니다. 다시 실행해주세요.)';
+               document.getElementById('pending').style.cssText ='color:red;';
+               console.log(parseInt(r.status.toString(10)))
+             }
              filter.stopWatching()
            })
          }

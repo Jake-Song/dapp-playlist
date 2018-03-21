@@ -15,21 +15,18 @@ class Stopwatch extends React.Component {
       countDown: 0,
       endpoint: "http://127.0.0.1:4001",
     };
+    this.socket = socketIOClient(this.state.endpoint)
   }
 
   componentDidMount(){
-    const { endpoint } = this.state
-    const socket = socketIOClient(endpoint)
-    socket.on("FromAPI", data => this.setState({ countDown: data }))
+    this.socket.on("FromAPI", data => this.setState({ countDown: data }))
   }
 
   handleStartClick() {
     let countDown = 300
-    const { endpoint } = this.state
-    const socket = socketIOClient(endpoint)
-    socket.emit("Start", countDown)
+    this.socket.emit("Start", countDown)
   }
-  
+
   render() {
 
     return (
