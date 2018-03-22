@@ -11,6 +11,8 @@
     "url": "https://github.com/Jake-Song/dapp-playlist.git"
   },
   "scripts": {
+    "restart": "pm2 startOrRestart ecosystem.config.js",
+    "deploy": "pm2 deploy ecosystem.config.js production",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -26,6 +28,7 @@
     "express": "^4.16.3",
     "express-ejs-extend": "0.0.1",
     "json-loader": "^0.5.7",
+    "pm2": "^2.10.1",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-router": "^4.2.0",
