@@ -285,6 +285,7 @@ const MyContract = web3.eth.contract([
   }
 
   getEvent(){
+
     var event = this.state.ContractInstance.NumberGenerated().watch( (error, result) => {
       if(error)
         console.log(error);
@@ -297,6 +298,7 @@ const MyContract = web3.eth.contract([
   }
 
   updateState(){
+
         this.state.ContractInstance.minimumBet((err, result) => {
            if(result != null){
               this.setState({
@@ -468,6 +470,7 @@ voteNumber(number, cb){
    }
 
 render(){
+
       return (
          <div className="main-container">
             <h1>Bet for your best number and win huge amounts of Ether</h1>

@@ -25,7 +25,7 @@ io.on("connection", socket => {
   socket.on("disconnect", () => console.log("Client disconnected."))
 })
 
-const getApiAndEmit = async socket => {
+const getApiAndEmit = async () => {
   try {
 
     if(!interval){
