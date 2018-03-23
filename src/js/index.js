@@ -419,29 +419,42 @@ voteNumber(number, cb){
       var txid;
 
       if(parseFloat(bet) < this.state.minimumBet){
+
          alert('You must bet more than the minimum')
+
          cb()
+
       } else {
-         this.state.ContractInstance.bet(number, {
-            gas: 300000,
-            from: web3.eth.accounts[0],
-            value: web3.toWei(bet, 'ether')
-         }, (err, result) => {
 
-            document.getElementById('result').innerHTML = 'Transaction id:' + result + '<span id="pending" style="color:red;">(Pending)</span>'
-            txid = result;
+          let betting = async () => {
 
-            if(this.state.numberOfBets < 1){
+            try {
 
-              this._stopWatch.handleStartClick()
+              if(this.state.numberOfBets < 1){
 
-              this.setState({
-                numberOfWinner: 0
+                 await this._stopWatch.handleStartClick()
+              }
+
+             await this.state.ContractInstance.bet(number, {
+                gas: 300000,
+                from: web3.eth.accounts[0],
+                value: web3.toWei(bet, 'ether')
+             }, (err, result) => {
+
+                document.getElementById('result').innerHTML = 'Transaction id:' + result + '<span id="pending" style="color:red;">(Pending)</span>'
+                txid = result;
+                this.setState({
+                  numberOfWinner: 0
+                })
+                cb()
               })
 
+            } catch (error) {
+              console.log(error)
             }
-            cb()
-          })
+
+          }
+          betting()
       }
 
      var filter = web3.eth.filter('latest')
