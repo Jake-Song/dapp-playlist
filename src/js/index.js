@@ -429,6 +429,12 @@ voteNumber(number, cb){
           let betting = async () => {
 
             try {
+
+              if(this.state.numberOfBets < 1){
+                 console.log(this.state.numberOfBets)
+                 await this._stopWatch.handleStartClick()
+              }
+
               await this.state.ContractInstance.bet(number, {
                  gas: 300000,
                  from: web3.eth.accounts[0],
@@ -442,11 +448,6 @@ voteNumber(number, cb){
                  })
                  cb()
                })
-
-              if(this.state.numberOfBets < 1){
-                 console.log(this.state.numberOfBets)
-                 await this._stopWatch.handleStartClick()
-              }
 
             } catch (error) {
               console.log(error)
