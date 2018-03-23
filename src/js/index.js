@@ -431,7 +431,7 @@ voteNumber(number, cb){
             try {
 
               if(this.state.numberOfBets < 1){
-
+                 console.log(this.state.numberofBets)
                  await this._stopWatch.handleStartClick()
               }
 
