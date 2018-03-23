@@ -429,9 +429,15 @@ voteNumber(number, cb){
           let betting = async () => {
 
             try {
-
+              await this.state.ContractInstance.numberOfBets((err, result) => {
+                 if(result != null){
+                    this.setState({
+                       numberOfBets: parseInt(result)
+                    })
+                 }
+              })
               if(this.state.numberOfBets < 1){
-                 console.log(this.state.numberofBets)
+                 console.log(this.state.numberOfBets)
                  await this._stopWatch.handleStartClick()
               }
 
