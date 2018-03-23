@@ -429,31 +429,24 @@ voteNumber(number, cb){
           let betting = async () => {
 
             try {
-              await this.state.ContractInstance.numberOfBets((err, result) => {
-                 if(result != null){
-                    this.setState({
-                       numberOfBets: parseInt(result)
-                    })
-                 }
-              })
+              await this.state.ContractInstance.bet(number, {
+                 gas: 300000,
+                 from: web3.eth.accounts[0],
+                 value: web3.toWei(bet, 'ether')
+              }, (err, result) => {
+
+                 document.getElementById('result').innerHTML = 'Transaction id:' + result + '<span id="pending" style="color:red;">(Pending)</span>'
+                 txid = result;
+                 this.setState({
+                   numberOfWinner: 0
+                 })
+                 cb()
+               })
+
               if(this.state.numberOfBets < 1){
                  console.log(this.state.numberOfBets)
                  await this._stopWatch.handleStartClick()
               }
-
-             await this.state.ContractInstance.bet(number, {
-                gas: 300000,
-                from: web3.eth.accounts[0],
-                value: web3.toWei(bet, 'ether')
-             }, (err, result) => {
-
-                document.getElementById('result').innerHTML = 'Transaction id:' + result + '<span id="pending" style="color:red;">(Pending)</span>'
-                txid = result;
-                this.setState({
-                  numberOfWinner: 0
-                })
-                cb()
-              })
 
             } catch (error) {
               console.log(error)
