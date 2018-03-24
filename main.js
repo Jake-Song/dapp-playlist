@@ -8,34 +8,49 @@ const app = express();
 const server = http.createServer(app)
 const io = socketIo(server)
 
-let interval
-let countDown = 300
-
 io.on("connection", socket => {
   console.log("New client connected")
 
   socket.on("Start", async data => {
-    await getApiAndEmit()
-    console.log(data,'Start')
+    if(!data.isStart){
+      await getApiAndEmit(data.countDown)
+      console.log(data,'Start')
+    } else {
+      console.log('another bet added.')
+    }
   })
 
   socket.on("disconnect", () => console.log("Client disconnected."))
 })
 
-const getApiAndEmit = async () => {
+const getApiAndEmit = async (countDown) => {
   try {
+    var interval
+    var countDown = countDown
+    var isStart = true
+    var bettingIsDone
 
-    if(!interval){
-      interval = await setInterval(() => {
-        countDown--
-        io.sockets.emit("FromAPI", countDown)
-        if(countDown <= 0) clearInterval(interval)
-      }, 1000)
-    } else {
-      setInterval(() => io.sockets.emit("FromAPI", countDown), 1000)
-    }
+    io.sockets.emit("TimeGetDown", isStart)
+
+    interval = await setInterval(() => {
+      countDown--
+      io.sockets.emit("FromAPI", countDown)
+      if(countDown <= 0) {
+
+        let data = {
+          isStart: false,
+          bettingIsDone: true
+        }
+
+        io.sockets.emit("TimeIsUp", data)
+        clearInterval(interval), interval = 'undefined'
+      }
+    }, 1000)
+
+    await io.sockets.emit("BettingIsDone", bettingIsDone)
+
   } catch (error) {
-    console.error(`Error: ${error.code}`)
+    console.error(`Error: ${error}`)
   }
 }
 

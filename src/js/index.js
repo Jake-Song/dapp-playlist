@@ -336,15 +336,17 @@ const MyContract = web3.eth.contract([
 
       liNodes.forEach(number => {
          number.addEventListener('click', event => {
-            event.target.className = 'number-selected'
-            this.voteNumber(parseInt(event.target.innerHTML), done => {
+           if(!this._stopWatch.bettingIsDone){
+             event.target.className = 'number-selected'
+             this.voteNumber(parseInt(event.target.innerHTML), done => {
 
-            // Remove the other number selected
-               for(let i = 0; i < liNodes.length; i++){
-                  liNodes[i].className = ''
-               }
-            })
-         })
+             // Remove the other number selected
+                for(let i = 0; i < liNodes.length; i++){
+                   liNodes[i].className = ''
+                }
+             })
+           }
+        })
       })
 
       execute.addEventListener('click', event => {
@@ -369,6 +371,7 @@ executeNum(){
       console.log(result);
       document.getElementById('result').innerHTML = 'Transaction id:' + result + '<span id="pending" style="color:red;">(Pending)</span>'
       txid = result
+
     }
   })
 
@@ -390,6 +393,10 @@ executeNum(){
 
             console.log(parseInt(r.status.toString(10)))
 
+            this._stopWatch.setState({
+              bettingIsDone: false
+            })
+
           } else {
             document.getElementById('pending').innerHTML = '(오류가 발생했습니다. 다시 실행해주세요.)';
             document.getElementById('pending').style.cssText ='color:red;';
@@ -404,6 +411,7 @@ executeNum(){
           this.setState({
             exStatus: parseInt(r.status.toString(10))
           })
+
           filter.stopWatching()
         })
       }
@@ -437,7 +445,7 @@ voteNumber(number, cb){
               return
             }
 
-             if(this.state.numberOfBets < 1){
+             if(!this._stopWatch.isStart){
                 this._stopWatch.handleStartClick()
              }
 
