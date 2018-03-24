@@ -9,10 +9,11 @@ const server = http.createServer(app)
 const io = socketIo(server)
 
 let interval
+let countDown = 300
 
 io.on("connection", socket => {
   console.log("New client connected")
-  
+
   socket.on("Start", async data => {
     await getApiAndEmit()
     console.log(data,'Start')
@@ -23,8 +24,6 @@ io.on("connection", socket => {
 
 const getApiAndEmit = async () => {
   try {
-
-    let countDown = 300
 
     if(!interval){
       interval = await setInterval(() => {

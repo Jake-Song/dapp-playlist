@@ -432,6 +432,11 @@ voteNumber(number, cb){
              value: web3.toWei(bet, 'ether')
           }, (err, result) => {
 
+            if(err){
+              console.log(err)
+              return
+            }
+
              if(this.state.numberOfBets < 1){
                 this._stopWatch.handleStartClick()
              }

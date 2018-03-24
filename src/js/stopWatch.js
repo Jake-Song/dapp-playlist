@@ -13,7 +13,7 @@ class Stopwatch extends React.Component {
     super(props);
     this.state = {
       countDown: 0,
-      endpoint: "http://ec2-13-125-149-140.ap-northeast-2.compute.amazonaws.com:3000",
+      endpoint: "localhost:3000",
     };
     this.socket = socketIOClient(this.state.endpoint)
   }
