@@ -33,7 +33,7 @@ class Stopwatch extends React.Component {
 
   handleStartClick() {
     let data = {
-      countDown: 60,
+      countDown: 300,
       isStart: this.state.isStart,
     }
     this.socket.emit("Start", data)
