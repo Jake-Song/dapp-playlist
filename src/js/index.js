@@ -279,12 +279,12 @@ const MyContract = web3.eth.contract([
   componentDidMount(){
         this.updateState()
         this.setupListeners()
-        this.getEvent()
+        this.getNumberOfWinner()
 
         setInterval(this.updateState.bind(this), 10e3)
   }
 
-  getEvent(){
+  getNumberOfWinner(){
 
     var event = this.state.ContractInstance.NumberGenerated().watch( (error, result) => {
       if(error)
@@ -426,36 +426,25 @@ voteNumber(number, cb){
 
       } else {
 
-          let betting = async () => {
+          this.state.ContractInstance.bet(number, {
+             gas: 300000,
+             from: web3.eth.accounts[0],
+             value: web3.toWei(bet, 'ether')
+          }, (err, result) => {
 
-            try {
+             if(this.state.numberOfBets < 1){
+                this._stopWatch.handleStartClick()
+             }
 
-              if(this.state.numberOfBets < 1){
-                 console.log(this.state.numberOfBets)
-                 await this._stopWatch.handleStartClick()
-              }
+             document.getElementById('result').innerHTML = 'Transaction id:' + result + '<span id="pending" style="color:red;">(Pending)</span>'
+             txid = result;
+             this.setState({
+               numberOfWinner: 0
+             })
+             cb()
 
-              await this.state.ContractInstance.bet(number, {
-                 gas: 300000,
-                 from: web3.eth.accounts[0],
-                 value: web3.toWei(bet, 'ether')
-              }, (err, result) => {
-
-                 document.getElementById('result').innerHTML = 'Transaction id:' + result + '<span id="pending" style="color:red;">(Pending)</span>'
-                 txid = result;
-                 this.setState({
-                   numberOfWinner: 0
-                 })
-                 cb()
-               })
-
-            } catch (error) {
-              console.log(error)
-            }
-
-          }
-          betting()
-      }
+           })
+        }
 
      var filter = web3.eth.filter('latest')
 
