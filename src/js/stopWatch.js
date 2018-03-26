@@ -14,7 +14,7 @@ class Stopwatch extends React.Component {
     this.state = {
       countDown: 0,
       isBettingDone: false,
-      endpoint: "localhost:3000",
+      endpoint: "http://ec2-52-79-207-174.ap-northeast-2.compute.amazonaws.com:3000",
     };
     this.socket = socketIOClient(this.state.endpoint)
   }
@@ -25,7 +25,7 @@ class Stopwatch extends React.Component {
   }
 
   handleStartClick() {
-    let countDown = 60
+    let countDown = 300
     this.socket.emit("TimerStart", countDown)
   }
 
