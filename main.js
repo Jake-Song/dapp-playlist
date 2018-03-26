@@ -8,11 +8,15 @@ const app = express();
 const server = http.createServer(app)
 const io = socketIo(server)
 
+let isTimerOn = false
+
 io.on("connection", socket => {
   console.log("New client connected")
 
   socket.on("Start", async data => {
-    if(!data.isStart){
+    console.log(isTimerOn)
+    if(!data.isStart && !isTimerOn ){
+      isTimerOn = true
       await getApiAndEmit(data.countDown)
       console.log(data,'Start')
     } else {
@@ -43,11 +47,11 @@ const getApiAndEmit = async (countDown) => {
         }
 
         io.sockets.emit("TimeIsUp", data)
-        clearInterval(interval), interval = 'undefined'
+        clearInterval(interval), interval = 'undefined', isTimerOn = false
+        console.log(isTimerOn)
       }
     }, 1000)
 
-    await io.sockets.emit("BettingIsDone", bettingIsDone)
 
   } catch (error) {
     console.error(`Error: ${error}`)
