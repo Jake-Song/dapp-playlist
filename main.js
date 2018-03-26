@@ -9,19 +9,33 @@ const server = http.createServer(app)
 const io = socketIo(server)
 
 let isTimerOn = false
+let isBettingOn = false
+let isBettingDone = false
+let isExecutingOn = false
 
 io.on("connection", socket => {
   console.log("New client connected")
 
-  socket.on("Start", async data => {
+  socket.on("TimerStart", async data => {
     console.log(isTimerOn)
-    if(!data.isStart && !isTimerOn ){
-      isTimerOn = true
-      await getApiAndEmit(data.countDown)
-      console.log(data,'Start')
+    if( !isTimerOn && !isExecutingOn && !isBettingOn ){
+      isTimerOn = true, isBettingOn = true
+      await getApiAndEmit(data)
+      console.log(data,'TimerStart')
     } else {
       console.log('another bet added.')
     }
+  })
+
+  socket.on("ExecuteStart", async data => {
+    isExecutingOn = true
+    console.log(data, isExecutingOn)
+  })
+
+  socket.on("ExecuteEnd", async data => {
+    isExecutingOn = false
+    isBettingDone = false
+    console.log(data, 'isExecutingOn: ' + isExecutingOn, 'isBettingOn: ' + isBettingOn )
   })
 
   socket.on("disconnect", () => console.log("Client disconnected."))
@@ -30,28 +44,25 @@ io.on("connection", socket => {
 const getApiAndEmit = async (countDown) => {
   try {
     var interval
-    var countDown = countDown
-    var isStart = true
-    var bettingIsDone
-
-    io.sockets.emit("TimeGetDown", isStart)
 
     interval = await setInterval(() => {
       countDown--
       io.sockets.emit("FromAPI", countDown)
       if(countDown <= 0) {
 
-        let data = {
-          isStart: false,
-          bettingIsDone: true
-        }
+        clearInterval(interval), interval = 'undefined'
 
-        io.sockets.emit("TimeIsUp", data)
-        clearInterval(interval), interval = 'undefined', isTimerOn = false
-        console.log(isTimerOn)
+        isBettingOn = false, isBettingDone = true, isTimerOn = false
+
+        console.log('isBettingOn: ' + isBettingOn, 'isTimerOn: ' + isTimerOn, 'isBettingDone: ' + isBettingDone)
+
+        let emitDone = setInterval(() => {
+            io.sockets.emit("BettingIsDone", isBettingDone)
+            console.log('isBettingDone: ', isBettingDone)
+            if(!isBettingDone) clearInterval(emitDone), emitDone = 'undefined'
+        }, 1000)
       }
     }, 1000)
-
 
   } catch (error) {
     console.error(`Error: ${error}`)
