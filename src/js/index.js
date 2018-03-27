@@ -344,21 +344,18 @@ class App extends React.Component {
              number.addEventListener('click', event => {
 
                if( !this._stopWatch.state.isTimerEnd
-                 && !this._stopWatch.state.isBetCompleted
-                 && !this._stopWatch.state.isExecuteOn ){
+                && !this._stopWatch.state.isExecuteOn ){
 
                  event.target.className = 'number-selected'
                  this.voteNumber(parseInt(event.target.innerHTML), done => {
                    removeHoverAll()
                  })
 
-              } else if(this._stopWatch.state.isBetCompleted){
+              } else if( this._stopWatch.state.isTimerEnd ){
                 alert('Betting is all done!')
-              } else if(this._stopWatch.state.isExecuteOn){
+              } else if( this._stopWatch.state.isExecuteOn ){
                 alert('Betting is not allowed when it is executing!')
-              } else if(this._stopWatch.state.isTimerEnd){
-                alert('Betting is not allowed when time is up!')
-               }
+              }
             })
           })
 
@@ -374,7 +371,7 @@ class App extends React.Component {
 
                 alert('You cannot execute. it\'s calculating')
 
-            } else if(!this._stopWatch.state.isBetCompleted && this._stopWatch.state.isTimerEnd){
+            } else if(!this._stopWatch.state.isBetCompleted){
 
               alert('You cannot execute until betting is completed.')
 
@@ -466,7 +463,7 @@ class App extends React.Component {
                 }
                  let data = {
                    transactionID: result,
-                   countDown: 300
+                   countDown: 60
                  }
 
                  this._stopWatch.socket.emit("BetStart", data)
