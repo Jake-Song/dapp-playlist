@@ -56,13 +56,21 @@ module.exports = (app) => {
 
         let betCompleted = setInterval(() =>{
 
+          if(!isTimerOn) response.isTimerEnd = true
+
           io.sockets.emit("BetCompleted", response)
 
           console.log('isBetCompleted: ', response)
 
-          if(isExecuteOn) clearInterval(betCompleted)
+          if(isExecuteOn || betterStart.length !== betterEnd.length){
+            clearInterval(betCompleted)
+            response.isBetCompleted = false
+
+            setTimeout(() => io.sockets.emit("BetCompleted", response), 1000)
+          }
 
         }, 1000)
+
       }
     })
 
@@ -84,13 +92,21 @@ module.exports = (app) => {
 
         let betCompleted = setInterval(() =>{
 
+          if(!isTimerOn) response.isTimerEnd = true
+
           io.sockets.emit("BetCompleted", response)
 
           console.log('isBetCompleted: ', response)
 
-          if(isExecuteOn) clearInterval(betCompleted)
+          if(isExecuteOn || betterStart.length !== betterEnd.length){
+            clearInterval(betCompleted)
+            response.isBetCompleted = false
+
+            setTimeout(() => io.sockets.emit("BetCompleted", response), 1000)
+          }
 
         }, 1000)
+
       }
     })
 
