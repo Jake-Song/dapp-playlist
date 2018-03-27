@@ -16,7 +16,7 @@ class Stopwatch extends React.Component {
       isTimerEnd: false,
       isBetCompleted: false,
       isExecuteOn: false,
-      endpoint: "localhost:3000",
+      endpoint: "ec2-52-79-207-174.ap-northeast-2.compute.amazonaws.com:4000",
     };
     this.socket = socketIOClient(this.state.endpoint)
   }
@@ -24,7 +24,13 @@ class Stopwatch extends React.Component {
   componentDidMount(){
     this.socket.on("FromBetTimer", data => this.setState({ countDown: data }))
     this.socket.on("TimerEnd", data => this.setState({ isTimerEnd: data }))
-    this.socket.on("BetCompleted", data => this.setState({ isBetCompleted: data }))
+    this.socket.on("BetCompleted", data =>
+      this.setState({
+        isBetCompleted: data.isBetCompleted,
+        isExecuteOn: data.isExecuteOn,
+        isTimerEnd: data.isTimerEnd
+      })
+    )
     this.socket.on("ExecuteOn", data =>
       this.setState({
         isTimerEnd: data.isTimerEnd,

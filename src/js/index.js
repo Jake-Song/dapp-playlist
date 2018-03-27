@@ -364,7 +364,9 @@ class App extends React.Component {
 
           execute.addEventListener('click', event => {
 
-            if(this._stopWatch.state.isBetCompleted && !this._stopWatch.state.isExecuteOn){
+            if(this._stopWatch.state.isBetCompleted
+              && !this._stopWatch.state.isExecuteOn
+              && this._stopWatch.state.isTimerEnd){
 
               this.executeNum()
 
@@ -464,7 +466,7 @@ class App extends React.Component {
                 }
                  let data = {
                    transactionID: result,
-                   countDown: 60
+                   countDown: 300
                  }
 
                  this._stopWatch.socket.emit("BetStart", data)
