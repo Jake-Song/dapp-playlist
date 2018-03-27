@@ -463,7 +463,7 @@ class App extends React.Component {
                 }
                  let data = {
                    transactionID: result,
-                   countDown: 60
+                   countDown: 300
                  }
 
                  this._stopWatch.socket.emit("BetStart", data)
