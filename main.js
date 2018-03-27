@@ -1,7 +1,6 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
-const axios = require('axios');
 const port = process.env.PORT || 3000;
 
 const app = express();
@@ -9,57 +8,185 @@ const server = http.createServer(app)
 const io = socketIo(server)
 
 let isTimerOn = false
-let isBettingOn = false
-let isBettingDone = false
-let isExecutingOn = false
+let isTimerEnd = false
+let isBetStart = false
+let isBetCompleted = false
+let isExecuteOn = false
+
+let betterStart = []
+let betterEnd = []
 
 io.on("connection", socket => {
+
   console.log("New client connected")
 
-  socket.on("TimerStart", async data => {
-    console.log(isTimerOn)
-    if( !isTimerOn && !isExecutingOn && !isBettingOn ){
-      isTimerOn = true, isBettingOn = true
-      await getApiAndEmit(data)
-      console.log(data,'TimerStart')
+  socket.on("BetStart", async data => {
+
+    await betterStart.push(data.transactionID)
+
+    await console.log(betterStart)
+
+    if( !isTimerOn && !isBetStart ){
+
+      isTimerOn = true, isBetStart = true
+
+      await betTimer(data.countDown)
+
+      console.log(data.countDown,'TimerStart')
+
     } else {
+
       console.log('another bet added.')
     }
   })
 
+  socket.on("BetReject", async data => {
+
+    await betterStart.pop()
+
+    console.log(data, betterStart)
+
+    if( betterStart.length === betterEnd.length ){
+
+      isBetCompleted = true
+
+      let betCompleted = setInterval(() =>{
+
+        io.sockets.emit("BetCompleted", isBetCompleted)
+
+        console.log('isBetCompleted: ', isBetCompleted)
+
+        if(isExecuteOn) clearInterval(betCompleted)
+
+      }, 1000)
+    }
+  })
+
+  socket.on("BetEnd", async data => {
+
+    await betterEnd.push(data)
+
+    console.log(betterEnd)
+
+    if( betterStart.length === betterEnd.length ){
+
+      isBetCompleted = true
+
+      let response = {
+        isBetCompleted: isBetCompleted,
+        isExecuteOn: isExecuteOn
+      }
+
+      let betCompleted = setInterval(() =>{
+
+        io.sockets.emit("BetCompleted", response)
+
+        console.log('isBetCompleted: ', response)
+
+        if(isExecuteOn) clearInterval(betCompleted)
+
+      }, 1000)
+    }
+  })
+
   socket.on("ExecuteStart", async data => {
-    isExecutingOn = true
-    console.log(data, isExecutingOn)
+
+    isTimerEnd = false
+    isBetCompleted = false
+    isExecuteOn = true
+
+    let response = {
+      isTimerEnd: isTimerEnd,
+      isBetCompleted: isBetCompleted,
+      isExecuteOn: isExecuteOn
+    }
+
+    await console.log(data)
+
+    let executeOn = setInterval(() => {
+
+      io.sockets.emit("ExecuteOn", response)
+
+      console.log("ExecuteOn: ", response)
+
+      if(!isExecuteOn) clearInterval(executeOn)
+
+    }, 1000)
+  })
+
+  socket.on("ExecutionReject", async data => {
+
+    isBetCompleted = true
+    isExecuteOn = false
+
+    await console.log(data)
+
+    let response = {
+      isBetCompleted: isBetCompleted,
+      isExecuteOn: isExecuteOn
+    }
+
+    let rewinded = await setInterval(() =>{
+
+      io.sockets.emit("BetCompleted", response)
+
+      console.log('isBetCompleted: ', response)
+
+      if(isExecuteOn) clearInterval(rewinded)
+
+    }, 1000)
+
   })
 
   socket.on("ExecuteEnd", async data => {
-    isExecutingOn = false
-    isBettingDone = false
-    console.log(data, 'isExecutingOn: ' + isExecutingOn, 'isBettingOn: ' + isBettingOn )
+
+    isExecuteOn = false
+
+    let response = {
+      isTimerEnd: isTimerEnd,
+      isBetCompleted: isBetCompleted,
+      isExecuteOn: isExecuteOn
+    }
+
+    betterStart = []
+    betterEnd = []
+
+    await console.log(
+      data, 'isTimerEnd: ' + isTimerEnd, 'isBetCompleted: ' + isBetCompleted,
+      betterStart, betterEnd
+    )
+
+    let executeOn = setTimeout(() => {
+      io.sockets.emit("ExecuteCompleted", response)
+      console.log('isExecuteOn: ', response.isExecuteOn)
+    }, 1000)
+
   })
 
   socket.on("disconnect", () => console.log("Client disconnected."))
 })
 
-const getApiAndEmit = async (countDown) => {
+const betTimer = async (countDown) => {
   try {
-    var interval
 
-    interval = await setInterval(() => {
+    let timer = await setInterval(() => {
+
       countDown--
-      io.sockets.emit("FromAPI", countDown)
+
+      io.sockets.emit("FromBetTimer", countDown)
+
       if(countDown <= 0) {
 
-        clearInterval(interval), interval = 'undefined'
+        clearInterval(timer)
 
-        isBettingOn = false, isBettingDone = true, isTimerOn = false
+        isTimerOn = false, isTimerEnd = true, isBetStart = false
 
-        console.log('isBettingOn: ' + isBettingOn, 'isTimerOn: ' + isTimerOn, 'isBettingDone: ' + isBettingDone)
+        console.log('isTimerOn: ' + isTimerOn, 'isBetStart: ' + isBetStart, 'isTimerEnd: ' + isTimerEnd)
 
-        let emitDone = setInterval(() => {
-            io.sockets.emit("BettingIsDone", isBettingDone)
-            console.log('isBettingDone: ', isBettingDone)
-            if(!isBettingDone) clearInterval(emitDone), emitDone = 'undefined'
+        let timerEnd = setInterval(() => {
+            io.sockets.emit("TimerEnd", isTimerEnd)
+            console.log('isTimerEnd: ', isTimerEnd)
+            if(isBetCompleted) clearInterval(timerEnd)
         }, 1000)
       }
     }, 1000)
