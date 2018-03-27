@@ -16,7 +16,7 @@ class Stopwatch extends React.Component {
       isTimerEnd: false,
       isBetCompleted: false,
       isExecuteOn: false,
-      endpoint: "localhost:4000",
+      endpoint: "ec2-52-79-207-174.ap-northeast-2.compute.amazonaws.com:4000",
     };
     this.socket = socketIOClient(this.state.endpoint)
   }
