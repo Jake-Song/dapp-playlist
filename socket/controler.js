@@ -48,11 +48,17 @@ module.exports = (app) => {
 
         isBetCompleted = true
 
+        let response = {
+          isTimerEnd: isTimerEnd,
+          isBetCompleted: isBetCompleted,
+          isExecuteOn: isExecuteOn
+        }
+
         let betCompleted = setInterval(() =>{
 
-          io.sockets.emit("BetCompleted", isBetCompleted)
+          io.sockets.emit("BetCompleted", response)
 
-          console.log('isBetCompleted: ', isBetCompleted)
+          console.log('isBetCompleted: ', response)
 
           if(isExecuteOn) clearInterval(betCompleted)
 
