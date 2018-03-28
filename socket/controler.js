@@ -66,7 +66,8 @@ module.exports = (app) => {
             clearInterval(betCompleted)
             isBetCompleted = false
             response.isBetCompleted = isBetCompleted
-            io.sockets.emit("BetCompleted", response)
+
+            setTimeout(() => io.sockets.emit("BetCompleted", response), 1000)
             console.log('clear betCompleted: ', response)
           }
 
@@ -103,7 +104,8 @@ module.exports = (app) => {
             clearInterval(betCompleted)
             isBetCompleted = false
             response.isBetCompleted = isBetCompleted
-            io.sockets.emit("BetCompleted", response)
+
+            setTimeout(() => io.sockets.emit("BetCompleted", response), 1000)
             console.log('clear betCompleted: ', response)
           }
 
@@ -183,7 +185,7 @@ module.exports = (app) => {
 
       let executeOn = setTimeout(() => {
         io.sockets.emit("ExecuteCompleted", response)
-        console.log('isExecuteOn: ', response.isExecuteOn)
+        console.log('isExecuteCompleted: ', response)
       }, 1000)
 
     })
