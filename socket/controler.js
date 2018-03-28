@@ -56,7 +56,7 @@ module.exports = (app) => {
 
         let betCompleted = setInterval(() =>{
 
-          if(!isTimerOn) response.isTimerEnd = true
+          if(isTimerEnd) response.isTimerEnd = true
 
           io.sockets.emit("BetCompleted", response)
 
@@ -64,9 +64,10 @@ module.exports = (app) => {
 
           if(isExecuteOn || betterStart.length !== betterEnd.length){
             clearInterval(betCompleted)
-            response.isBetCompleted = false
-
-            setTimeout(() => io.sockets.emit("BetCompleted", response), 1000)
+            isBetCompleted = false
+            response.isBetCompleted = isBetCompleted
+            io.sockets.emit("BetCompleted", response)
+            console.log('clear betCompleted: ', response)
           }
 
         }, 1000)
@@ -92,7 +93,7 @@ module.exports = (app) => {
 
         let betCompleted = setInterval(() =>{
 
-          if(!isTimerOn) response.isTimerEnd = true
+          if(isTimerEnd) response.isTimerEnd = true
 
           io.sockets.emit("BetCompleted", response)
 
@@ -100,9 +101,10 @@ module.exports = (app) => {
 
           if(isExecuteOn || betterStart.length !== betterEnd.length){
             clearInterval(betCompleted)
-            response.isBetCompleted = false
-
-            setTimeout(() => io.sockets.emit("BetCompleted", response), 1000)
+            isBetCompleted = false
+            response.isBetCompleted = isBetCompleted
+            io.sockets.emit("BetCompleted", response)
+            console.log('clear betCompleted: ', response)
           }
 
         }, 1000)
