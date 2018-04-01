@@ -275,11 +275,103 @@ class App extends React.Component {
       }
 
       componentDidMount(){
+            this.betSet = new Set()
+            this.exeTx = false
+
             this.updateState()
             this.setupListeners()
             this.getNumberOfWinner()
 
             setInterval(this.updateState.bind(this), 10e3)
+
+            this._stopWatch.socket.on("BetWaiting", data => {
+              if(!this.betSet.has(data)){
+                this.betFilter(data)
+                this.betSet.add(data)
+                console.log(this.betSet)
+              }
+            })
+
+            this._stopWatch.socket.on("BetCompleted", data =>{
+              if(this._stopWatch.state.isBetCompleted){
+                this.betSet.clear()
+              }
+            })
+
+            this._stopWatch.socket.on("ExecuteOn", data => {
+              if(!this.exeTx){
+                this.exeFilter(data.exeTx)
+                this.exeTx = data.exeTx
+
+              }
+            })
+
+            this._stopWatch.socket.on("ExecuteCompleted", data => {
+              if(!this._stopWatch.state.isExecuteOn){
+                this.exeTx = false
+              }
+            })
+
+      }
+
+      betFilter(txid){
+        var filter = web3.eth.filter('latest')
+
+        filter.watch((e, r) => {
+
+          web3.eth.getTransaction(txid, (e,r) => {
+            if (r != null && r.blockNumber > 0) {
+
+              web3.eth.getTransactionReceipt(txid, (e,r) => {
+                if(parseInt(r.status.toString(10)) === 1){
+                  document.getElementById('pending').innerHTML = '(기록된 블록: ' + r.blockNumber + ')';
+                  document.getElementById('pending').style.cssText ='color:green;';
+                  console.log(parseInt(r.status.toString(10)))
+
+                  this._stopWatch.socket.emit("BetEnd", txid)
+
+                } else {
+                  document.getElementById('pending').innerHTML = '(중복베팅 불가 - 한 계정 당 한번씩 실행할 수 있습니다.)';
+                  document.getElementById('pending').style.cssText ='color:red;';
+                  console.log(parseInt(r.status.toString(10)))
+
+                  this._stopWatch.socket.emit("BetReject", txid)
+                }
+                filter.stopWatching()
+              })
+            }
+         })
+       })
+      }
+
+      exeFilter(txid){
+        var filter = web3.eth.filter('latest')
+
+        filter.watch((e, r) => {
+            web3.eth.getTransaction(txid, (e,r) => {
+            if (r != null && r.blockNumber > 0) {
+
+              web3.eth.getTransactionReceipt(txid, (e,r) => {
+
+                if(parseInt(r.status.toString(10)) === 1){
+                  document.getElementById('pending').innerHTML = '(기록된 블록: ' + r.blockNumber + ')';
+                  document.getElementById('pending').style.cssText ='color:green;';
+
+                  this._stopWatch.socket.emit("ExecuteEnd", txid)
+
+                } else {
+                  document.getElementById('pending').innerHTML = '(오류가 발생했습니다. 다시 실행해주세요.)';
+                  document.getElementById('pending').style.cssText ='color:red;';
+
+                  this._stopWatch.socket.emit("ExecutionReject", txid)
+
+                }
+
+                filter.stopWatching()
+              })
+            }
+         })
+       })
       }
 
       getNumberOfWinner(){
@@ -399,40 +491,12 @@ class App extends React.Component {
 
         console.log(result);
 
-        this._stopWatch.socket.emit("ExecuteStart", "executeStart!")
+        this._stopWatch.socket.emit("ExecuteStart", result)
 
         document.getElementById('result').innerHTML = 'Transaction id:' + result + '<span id="pending" style="color:red;">(Pending)</span>'
         txid = result
 
       })
-
-      var filter = web3.eth.filter('latest')
-
-      filter.watch((e, r) => {
-          web3.eth.getTransaction(txid, (e,r) => {
-          if (r != null && r.blockNumber > 0) {
-
-            web3.eth.getTransactionReceipt(txid, (e,r) => {
-
-              if(parseInt(r.status.toString(10)) === 1){
-                document.getElementById('pending').innerHTML = '(기록된 블록: ' + r.blockNumber + ')';
-                document.getElementById('pending').style.cssText ='color:green;';
-
-                this._stopWatch.socket.emit("ExecuteEnd", "executeEnd!")
-
-              } else {
-                document.getElementById('pending').innerHTML = '(오류가 발생했습니다. 다시 실행해주세요.)';
-                document.getElementById('pending').style.cssText ='color:red;';
-
-                this._stopWatch.socket.emit("ExecutionReject", "ExecutionReject!")
-
-              }
-
-              filter.stopWatching()
-            })
-          }
-       })
-     })
     }
 
     voteNumber(number, cb){
@@ -478,35 +542,7 @@ class App extends React.Component {
                })
             }
 
-         var filter = web3.eth.filter('latest')
-
-         filter.watch((e, r) => {
-
-           web3.eth.getTransaction(txid, (e,r) => {
-             if (r != null && r.blockNumber > 0) {
-
-               web3.eth.getTransactionReceipt(txid, (e,r) => {
-                 if(parseInt(r.status.toString(10)) === 1){
-                   document.getElementById('pending').innerHTML = '(기록된 블록: ' + r.blockNumber + ')';
-                   document.getElementById('pending').style.cssText ='color:green;';
-                   console.log(parseInt(r.status.toString(10)))
-
-                   this._stopWatch.socket.emit("BetEnd", r.blockNumber)
-
-                 } else {
-                   document.getElementById('pending').innerHTML = '(중복베팅 불가 - 한 계정 당 한번씩 실행할 수 있습니다.)';
-                   document.getElementById('pending').style.cssText ='color:red;';
-                   console.log(parseInt(r.status.toString(10)))
-
-                   this._stopWatch.socket.emit("BetReject", "BetReject!")
-                 }
-                 filter.stopWatching()
-               })
-             }
-          })
-        })
-
-       }
+        }
 
     render(){
 
