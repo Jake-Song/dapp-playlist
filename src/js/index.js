@@ -18,6 +18,9 @@ class App extends React.Component {
          numberOfWinner: 0,
       }
 
+      this.betSet = new Set()
+      this.exeTx = new Set()
+
       if(typeof web3 != 'undefined'){
          console.log("Using web3 detected from external source like Metamask")
          this.web3 = new Web3(web3.currentProvider)
@@ -275,8 +278,7 @@ class App extends React.Component {
       }
 
       componentDidMount(){
-            this.betSet = new Set()
-            this.exeTx = false
+            console.log("before: ", this.betSet), console.log("before: ", this.exeTx)
 
             this.updateState()
             this.setupListeners()
@@ -288,7 +290,7 @@ class App extends React.Component {
               if(!this.betSet.has(data)){
                 this.betFilter(data)
                 this.betSet.add(data)
-                console.log(this.betSet)
+                console.log("after: ", this.betSet)
               }
             })
 
@@ -299,16 +301,16 @@ class App extends React.Component {
             })
 
             this._stopWatch.socket.on("ExecuteOn", data => {
-              if(!this.exeTx){
+              if(!this.exeTx.has(data.exeTx)){
                 this.exeFilter(data.exeTx)
-                this.exeTx = data.exeTx
-
+                this.exeTx.add(data.exeTx)
+                console.log("after: ", this.exeTx)
               }
             })
 
             this._stopWatch.socket.on("ExecuteCompleted", data => {
               if(!this._stopWatch.state.isExecuteOn){
-                this.exeTx = false
+                this.exeTx.clear()
               }
             })
 
