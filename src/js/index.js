@@ -296,6 +296,8 @@ class App extends React.Component {
 
             this._stopWatch.socket.on("ExecuteOn", data => {
 
+              this.accountSet.clear()
+
               if ( this.state.numberOfBets === 0 && this.state.numberOfWinner !== 0 ){
                 this._stopWatch.socket.emit("ExecuteResponse")
               }
