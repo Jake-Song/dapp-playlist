@@ -18,8 +18,7 @@ class App extends React.Component {
          numberOfWinner: 0,
       }
 
-      this.betSet = new Set()
-      this.exeTx = new Set()
+      this.accountSet = new Set()
 
       if(typeof web3 != 'undefined'){
          console.log("Using web3 detected from external source like Metamask")
@@ -278,7 +277,6 @@ class App extends React.Component {
       }
 
       componentDidMount(){
-            console.log("before: ", this.betSet), console.log("before: ", this.exeTx)
 
             this.updateState()
             this.setupListeners()
@@ -286,94 +284,23 @@ class App extends React.Component {
 
             setInterval(this.updateState.bind(this), 10e3)
 
-            this._stopWatch.socket.on("BetWaiting", data => {
-              if(!this.betSet.has(data)){
-                this.betFilter(data)
-                this.betSet.add(data)
-                console.log("after: ", this.betSet)
-              }
-            })
+            this._stopWatch.socket.on("BetOn", data => {
 
-            this._stopWatch.socket.on("BetCompleted", data =>{
-              if(this._stopWatch.state.isBetCompleted){
-                this.betSet.clear()
-              }
+              this.accountSet = new Set(data.account)
+
+              let numberOfBets = this.state.numberOfBets
+
+              this._stopWatch.socket.emit("BetResponse", numberOfBets )
+
             })
 
             this._stopWatch.socket.on("ExecuteOn", data => {
-              if(!this.exeTx.has(data.exeTx)){
-                this.exeFilter(data.exeTx)
-                this.exeTx.add(data.exeTx)
-                console.log("after: ", this.exeTx)
+
+              if ( this.state.numberOfBets === 0 && this.state.numberOfWinner !== 0 ){
+                this._stopWatch.socket.emit("ExecuteResponse")
               }
             })
 
-            this._stopWatch.socket.on("ExecuteCompleted", data => {
-              if(!this._stopWatch.state.isExecuteOn){
-                this.exeTx.clear()
-              }
-            })
-
-      }
-
-      betFilter(txid){
-        var filter = web3.eth.filter('latest')
-
-        filter.watch((e, r) => {
-
-          web3.eth.getTransaction(txid, (e,r) => {
-            if (r != null && r.blockNumber > 0) {
-
-              web3.eth.getTransactionReceipt(txid, (e,r) => {
-                if(parseInt(r.status.toString(10)) === 1){
-                  document.getElementById('pending').innerHTML = '(기록된 블록: ' + r.blockNumber + ')';
-                  document.getElementById('pending').style.cssText ='color:green;';
-                  console.log(parseInt(r.status.toString(10)))
-
-                  this._stopWatch.socket.emit("BetEnd", txid)
-
-                } else {
-                  document.getElementById('pending').innerHTML = '(중복베팅 불가 - 한 계정 당 한번씩 실행할 수 있습니다.)';
-                  document.getElementById('pending').style.cssText ='color:red;';
-                  console.log(parseInt(r.status.toString(10)))
-
-                  this._stopWatch.socket.emit("BetReject", txid)
-                }
-                filter.stopWatching()
-              })
-            }
-         })
-       })
-      }
-
-      exeFilter(txid){
-        var filter = web3.eth.filter('latest')
-
-        filter.watch((e, r) => {
-            web3.eth.getTransaction(txid, (e,r) => {
-            if (r != null && r.blockNumber > 0) {
-
-              web3.eth.getTransactionReceipt(txid, (e,r) => {
-
-                if(parseInt(r.status.toString(10)) === 1){
-                  document.getElementById('pending').innerHTML = '(기록된 블록: ' + r.blockNumber + ')';
-                  document.getElementById('pending').style.cssText ='color:green;';
-
-                  this._stopWatch.socket.emit("ExecuteEnd", txid)
-
-                } else {
-                  document.getElementById('pending').innerHTML = '(오류가 발생했습니다. 다시 실행해주세요.)';
-                  document.getElementById('pending').style.cssText ='color:red;';
-
-                  this._stopWatch.socket.emit("ExecutionReject", txid)
-
-                }
-
-                filter.stopWatching()
-              })
-            }
-         })
-       })
       }
 
       getNumberOfWinner(){
@@ -424,7 +351,7 @@ class App extends React.Component {
     // Listen for events and executes the voteNumber method
        setupListeners(){
           let liNodes = this.refs.numbers.querySelectorAll('li')
-          let execute = document.getElementById('execute')
+          let execute = this.execute
 
           function removeHoverAll(){
             // Remove the other number selected
@@ -437,43 +364,50 @@ class App extends React.Component {
 
              number.addEventListener('click', event => {
 
-               if( !this._stopWatch.state.isTimerEnd
-                && !this._stopWatch.state.isExecuteOn ){
+               if ( !this._stopWatch.state.isExecuteOn && !this._stopWatch.state.isTimerEnd && !this.accountSet.has(web3.eth.accounts[0]) ){
 
                  event.target.className = 'number-selected'
                  this.voteNumber(parseInt(event.target.innerHTML), done => {
                    removeHoverAll()
                  })
 
-              } else if( this._stopWatch.state.isTimerEnd ){
-                alert('Betting is all done!')
-              } else if( this._stopWatch.state.isExecuteOn ){
-                alert('Betting is not allowed when it is executing!')
-              }
+               } else if ( this._stopWatch.state.isExecuteOn ) {
+                 alert("Not allowed during that it is calculating.")
+               } else if ( this._stopWatch.state.isTimerEnd ) {
+                 alert("Not allowed when time is up.")
+               } else if ( this.accountSet.has(web3.eth.accounts[0]) ) {
+                 alert("Not allowed multi votes at one time.")
+               }
+
             })
+
           })
 
           execute.addEventListener('click', event => {
 
-            if(this._stopWatch.state.isBetCompleted
-              && !this._stopWatch.state.isExecuteOn
-              && this._stopWatch.state.isTimerEnd){
+            if ( !this._stopWatch.state.isBetOn && !this._stopWatch.state.isTimerOn
+                  && this._stopWatch.state.isBetCompleted && !this._stopWatch.state.isExecuteOn){
 
               this.executeNum()
 
-            } else if(this._stopWatch.state.isExecuteOn) {
+            } else if ( this._stopWatch.state.isTimerOn ) {
 
-                alert('You cannot execute. it\'s calculating')
+              alert("Not allowed until time is up.")
 
-            } else if(!this._stopWatch.state.isBetCompleted){
+            } else if ( this._stopWatch.state.isBetOn ) {
 
-              alert('You cannot execute until betting is completed.')
+              alert("Betting is progressing.")
 
-            } else if(!this._stopWatch.state.isTimerEnd) {
+            } else if (this._stopWatch.state.isExecuteOn) {
 
-              alert('You cannot execute until time is up.')
+              alert("Not allowed during that it is calculating.")
+
+            } else if ( !this._stopWatch.state.isBetCompleted ) {
+
+              alert("Betting is not completed.")
 
             }
+
           })
 
        }
@@ -493,10 +427,34 @@ class App extends React.Component {
 
         console.log(result);
 
-        this._stopWatch.socket.emit("ExecuteStart", result)
-
-        document.getElementById('result').innerHTML = 'Transaction id:' + result + '<span id="pending" style="color:red;">(Pending)</span>'
+        this.result.innerHTML = 'Transaction id:' + result + '<span id="pending" style="color:red;">(Pending)</span>'
         txid = result
+
+        this._stopWatch.socket.emit("ExecuteStart", txid)
+
+        var filter = web3.eth.filter('latest')
+
+        filter.watch((e, r) => {
+            web3.eth.getTransaction(txid, (e,r) => {
+            if (r != null && r.blockNumber > 0) {
+
+              web3.eth.getTransactionReceipt(txid, (e,r) => {
+
+                if(parseInt(r.status.toString(10)) === 1){
+                  document.getElementById('pending').innerHTML = '(기록된 블록: ' + r.blockNumber + ')';
+                  document.getElementById('pending').style.cssText ='color:green;';
+
+                } else {
+                  document.getElementById('pending').innerHTML = '(오류가 발생했습니다. 다시 실행해주세요.)';
+                  document.getElementById('pending').style.cssText ='color:red;';
+
+                }
+
+                filter.stopWatching()
+              })
+            }
+         })
+       })
 
       })
     }
@@ -528,22 +486,47 @@ class App extends React.Component {
                   return
                 }
                  let data = {
-                   transactionID: result,
+                   account: web3.eth.accounts[0],
                    countDown: 300
                  }
 
                  this._stopWatch.socket.emit("BetStart", data)
 
-                 document.getElementById('result').innerHTML = 'Transaction id:' + result + '<span id="pending" style="color:red;">(Pending)</span>'
-                 txid = result;
+                 this.result.innerHTML = 'Transaction id:' + result + '<span id="pending" style="color:red;">(Pending)</span>'
+
+                 txid = result
+
+                 var filter = web3.eth.filter('latest')
+
+                 filter.watch((e, r) => {
+
+                   web3.eth.getTransaction(txid, (e,r) => {
+                     if (r != null && r.blockNumber > 0) {
+
+                       web3.eth.getTransactionReceipt(txid, (e,r) => {
+                         if(parseInt(r.status.toString(10)) === 1){
+                           document.getElementById('pending').innerHTML = '(기록된 블록: ' + r.blockNumber + ')';
+                           document.getElementById('pending').style.cssText ='color:green;';
+                           console.log(parseInt(r.status.toString(10)))
+
+                         } else {
+                           document.getElementById('pending').innerHTML = '(중복베팅 불가 - 한 계정 당 한번씩 실행할 수 있습니다.)';
+                           document.getElementById('pending').style.cssText ='color:red;';
+                           console.log(parseInt(r.status.toString(10)))
+
+                         }
+                         filter.stopWatching()
+                       })
+                     }
+                  })
+                })
+
                  this.setState({
                    numberOfWinner: 0
                  })
                  cb()
-
                })
             }
-
         }
 
     render(){
@@ -582,13 +565,13 @@ class App extends React.Component {
                    <span>{this.state.numberOfWinner}</span>
                 </div>
 
-                <div id="result">
+                <div id="result" ref = {(result) => { this.result = result }}>
 
                 </div>
-                <div id="execute">
+                <div id="execute" ref = {(execute) => { this.execute = execute }}>
                   Click to execute
                 </div>
-                <Stopwatch ref={(stopWatch) => { this._stopWatch = stopWatch; }} />
+                <Stopwatch ref={(stopWatch) => { this._stopWatch = stopWatch }} />
     <hr/>
 
                 <h2>Vote for the next number</h2>
