@@ -13,8 +13,10 @@ class Stopwatch extends React.Component {
     super(props);
     this.state = {
       countDown: 0,
-      isTimerEnd: false,
+      isBetOn: false,
       isBetCompleted: false,
+      isTimerOn: false,
+      isTimerEnd: false,
       isExecuteOn: false,
       endpoint: "localhost:4000",
     };
@@ -22,27 +24,11 @@ class Stopwatch extends React.Component {
   }
 
   componentDidMount(){
-    this.socket.on("FromBetTimer", data => this.setState({ countDown: data }))
-    this.socket.on("TimerEnd", data => this.setState({ isTimerEnd: data }))
-    this.socket.on("BetCompleted", data =>
-      this.setState({
-        isBetCompleted: data.isBetCompleted,
-        isExecuteOn: data.isExecuteOn,
-        isTimerEnd: data.isTimerEnd
-      })
-    )
-    this.socket.on("ExecuteOn", data =>
-      this.setState({
-        isTimerEnd: data.isTimerEnd,
-        isBetCompleted: data.isBetCompleted,
-        isExecuteOn: data.isExecuteOn
-      })
-    )
-    this.socket.on("ExecuteCompleted", data =>
-      this.setState({
-        isExecuteOn: data.isExecuteOn
-      })
-    )
+    this.socket.on("FromBetTimer", data => this.setState({ countDown: data.countDown, isTimerOn: data.isTimerOn, isTimerEnd: data.isTimerEnd }))
+    this.socket.on("BetOn", data => this.setState({ isBetOn: data.isBetOn }))
+    this.socket.on("BetCompleted", data => this.setState({ isBetCompleted: data.isBetCompleted }))
+    this.socket.on("ExecuteOn", data => this.setState({ isExecuteOn: data.isExecuteOn, isTimerEnd: data.isTimerEnd }))
+
   }
 
   render() {
