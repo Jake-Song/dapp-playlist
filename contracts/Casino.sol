@@ -1,5 +1,7 @@
 pragma solidity ^0.4.20;
 
+//@title: Casino Contract
+
 contract Casino {
    address public owner;
    uint256 public minimumBet;
