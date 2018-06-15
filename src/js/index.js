@@ -583,7 +583,7 @@ class App extends React.Component {
                    <br/>
                 </label>
 
-       <ul ref="numbers">
+                <ul ref="numbers">
                    <li>1</li>
                    <li>2</li>
                    <li>3</li>
